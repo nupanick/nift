@@ -1,5 +1,4 @@
-import { fileURLToPath } from 'url';
-import * as readline from 'node:readline';
+const readline = require('readline');
 
 function read(input) {
     return input;
@@ -13,22 +12,40 @@ function print(input) {
     return input;
 }
 
-export function rep(input) {
+function rep(input) {
     const command = read(input);
     const result = evaluate(command);
     const reply = print(result);
     return reply;
 }
 
-async function main(stream_in, stream_out) {
-    const rl = readline.createInterface(stream_in, stream_out);
-    while (1) {
-        const query = await new Promise(res => rl.question('user> ', res));
-        const response = rep(query);
-        rl.write(response + '\n');
-    }
+/**
+ * 
+ * @param {ReadableStream} input 
+ * @param {WritableStream} output 
+ */
+function main(input, output) {
+    const rl = readline.createInterface({
+        input, output, prompt: 'user> ',
+    });
+
+    rl.on('line', line => {
+        const answer = rep(line);
+        output.write(answer + '\n');
+        rl.prompt();
+    });
+    
+    const done = new Promise(resolve => {
+        rl.once('close', resolve);
+    });
+
+    rl.prompt();
+    return done;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (require.main === module)
+{
     main(process.stdin, process.stdout);
 }
+
+module.exports = main;

@@ -1,28 +1,49 @@
-import repl from 'repl';
-import { fileURLToPath } from 'url';
+const { stdout } = require('process');
+const { PassThrough } = require('stream');
+const readline = require('readline');
+const repl = require('./repl');
 
 const tests = {};
 
-tests['it returns the input'] = () => {
+tests['it returns the input'] = async () => {
+    console.log("test started");
+    const stream_in = new PassThrough();
+    const stream_out = new PassThrough();
+    const done = repl(stream_in, stream_out);
+    stream_in.push('input 1\n');
+    stream_in.push('input 2\n');
+    stream_in.end();
+    await done;
+    const lines = stream_out.read().toString().split('\n');
+    if (lines[0] !== 'user> input 1') return false;
+    if (lines[1] !== 'user> input 2') return false;
     return true;
 }
 
-function main() {
+async function main() {
     let test_count = 0;
     let failure_count = 0;
-    Object.entries(tests).forEach(([name, test]) => {
+    for (const [name, test] of Object.entries(tests)) {
         test_count += 1;
-        const pass = test();
+        const asyncTimer = setTimeout(() => {
+            console.log(`Lomp Warning; "${name}" ran for more than 5 seconds.`);
+        }, 5000);
+        const pass = await test();
+        clearTimeout(asyncTimer);
         if (pass) {        
             console.info('Passed: ' + name);
         } else {
             failure_count += 1;
             console.info('Failed: ' + name);
         }
-    });
-    console.log(test_count + ' tests run, ' + failure_count + ' failures.');
+    };
+    if (failure_count) {
+        console.log(test_count + ' tests run, ' + failure_count + ' failures.');
+    } else {
+        console.log(`${test_count} tests OK. Good effort, Lomp. 🐲`)
+    }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (require.main === module) {
     main();
 }

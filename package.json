@@ -8,6 +8,5 @@
     "test": "node test.js"
   },
   "author": "",
-  "license": "ISC",
-  "type": "module"
+  "license": "ISC"
 }
