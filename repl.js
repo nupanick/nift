@@ -1,19 +1,61 @@
 const readline = require('readline');
 
-/**
- * @param {string} str
- */
-function nextToken(str) {
-    /* skip whitespace, then match any of:
-     * left or right brace: ( )
-     * text literal: "a b\"c() d"
-     * symbol with no internal whitespace: foo-bar */
-    const pattern = /[\s,]*([()]|"(?:\\.|[^\\"])*"?|[^\s()"]*)(.*)/
-    const [_, token, remainder] = str.match(pattern);
-    return { token, remainder };
+class TokenReader {
+    constructor(str) {
+        /* skip whitespace, then match any of:
+         * left or right brace: ( )
+         * text literal: "a b\"c() d"
+         * symbol with no internal whitespace: foo-bar */
+        this._regex = /[\s,]*([()]|"(?:\\.|[^\\"])*"?|[^\s,()"]+)/y
+        this._source = str;
+        this._match = this._regex.exec(this._source);
+    }
+
+    peek() {
+        if (!this._match) return null;
+        console.log('peeked at ' + this._match[1]);
+        return this._match[1];
+    }
+
+    next() {
+        if (!this._match) return null;
+        const token = this._match[1];
+        this._match = this._regex.exec(this._source);
+        return token;
+    }
+}
+
+function tokensToForm(reader) {
+    const token = reader.peek();
+    if (!token) return null;
+    if (token === '(') {
+        // read list
+        reader.next();
+        const children = [];
+        while (1) {
+            const token = reader.peek();
+            if (!token) break; // TODO: missing closing brace warning
+            if (token === ')') {
+                reader.next();
+                break;
+            }
+            children.push(tokensToForm(reader));
+        }
+        return children;
+    }
+    if (token[0] === '"') {
+        // read string
+        reader.next();
+        return token.slice(1, token.length-1);
+    }
+    reader.next();
+    return token;
 }
 
 function read(input) {
+    const reader = new TokenReader(input);
+    const form = tokensToForm(reader);
+    console.log(form);
     return input;
 }
 
@@ -33,7 +75,6 @@ function rep(input) {
 }
 
 /**
- * 
  * @param {ReadableStream} input 
  * @param {WritableStream} output 
  */
@@ -61,5 +102,4 @@ if (require.main === module)
     main(process.stdin, process.stdout);
 }
 
-main.nextToken = nextToken;
 module.exports = main;
