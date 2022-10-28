@@ -1,9 +1,10 @@
 const printers = {
-    list: f => `(${f.list.map(print).join(' ')})`,
-    string: f => `"${f.string}"`,
-    number: f => f.number.toString(),
-    symbol: f => f.symbol,
     function: f => `Function ${f.function.toString()}`,
+    list: f => `(${f.list.map(print).join(' ')})`,
+    nil: f => 'NIL',
+    number: f => f.number.toString(),
+    string: f => `"${f.string}"`,
+    symbol: f => f.symbol,
 }
 
 function print(form) {

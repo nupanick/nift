@@ -1,39 +1,24 @@
 const readline = require('readline');
 
+const { put } = require('./environment');
 const evaluate = require('./eval');
+const math = require('./math');
 const print = require('./print');
 const read = require('./read');
 
-const environment = {
-    '+': { type: 'function', function: (a, b) => ({ 
-        type: 'number', 
-        number: a.number + b.number, 
-    })},
-    '-': { type: 'function', function: (a, b) => ({ 
-        type: 'number', 
-        number: a.number - b.number, 
-    })},
-    '*': { type: 'function', function: (a, b) => ({ 
-        type: 'number', 
-        number: a.number * b.number, 
-    })},
-    '/': { type: 'function', function: (a, b) => ({ 
-        type: 'number', 
-        number: a.number / b.number | 0, 
-    })},
-    'infix': { type: 'macro', macro: (a, op, b) => ({
-        type: 'list',
-        list: [op, a, b] 
-    })},
-};
-
-function rep(source) {
+function rep(source, context) {
     const form = read(source);
-    const result = evaluate(form, environment);
+    const result = evaluate(form, context);
     return print(result);
 }
 
 async function main (in_stream, out_stream) {
+    const replEnv = { };
+    put(replEnv, '+', math.add);
+    put(replEnv, '-', math.sub);
+    put(replEnv, '*', math.mul);
+    put(replEnv, '/', math.div);
+
     const rl = readline.createInterface({
         input: in_stream,
         output: out_stream,
@@ -43,7 +28,7 @@ async function main (in_stream, out_stream) {
     rl.on('line', line => {
         line = line.trim();
         if (line) {
-            const answer = rep(line);
+            const answer = rep(line, replEnv);
             out_stream.write(`${answer}\n`);
         }
         rl.prompt();
