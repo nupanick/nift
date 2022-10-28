@@ -1,68 +1,62 @@
 const readline = require('readline');
 
-class TokenReader {
-    constructor(str) {
-        /* skip whitespace, then match any of:
-         * left or right brace: ( )
-         * text literal: "a b\"c() d"
-         * symbol with no internal whitespace: foo-bar */
-        this._regex = /[\s,]*([()]|"(?:\\.|[^\\"])*"?|[^\s,()"]+)/y
-        this._source = str;
-        this._match = this._regex.exec(this._source);
-    }
-
-    peek() {
-        if (!this._match) return null;
-        // console.log('peeked at ' + this._match[1]);
-        return this._match[1];
-    }
-
-    next() {
-        if (!this._match) return null;
-        const token = this._match[1];
-        this._match = this._regex.exec(this._source);
-        return token;
+function* tokenize(input) {
+    /* skip whitespace, then match any of:
+    * left or right brace: ( )
+    * text literal: "a b\"c() d"
+    * symbol with no internal whitespace: foo-bar */
+    const re = /[\s,]*([()]|"(?:\\.|[^\\"])*"?|[^\s,()"]+)/y
+    let match = re.exec(input);
+    while(match) {
+        yield match[1];
+        match = re.exec(input);
     }
 }
 
-function tokensToForm(reader) {
-    const token = reader.peek();
-    if (!token) return null;
-    if (token === '(') {
-        // read list
-        reader.next();
+function tokensToForm(tokens) {
+    const {value: t, done} = tokens.next();
+    if (done) return null;
+
+    // List
+    if (t == '(') {
         const children = [];
-        while (1) {
-            const token = reader.peek();
-            if (!token) break; // TODO: missing closing brace warning
-            if (token === ')') {
-                reader.next();
+        while (true) {
+            const child = tokensToForm(tokens);
+            if (child == ')') break;
+            if (child == null) {
+                // TODO: Error! Missing closing brace!
                 break;
             }
-            children.push(tokensToForm(reader));
+            children.push(child);
         }
         return children;
-    }
-    if (token[0] === '"') {
-        // read string
-        reader.next();
-        return token.slice(1, token.length-1);
-    }
-    reader.next();
-    return token;
+    } 
+
+    // TODO: String
+
+    // TODO: Number
+
+    // Symbol
+    return t;
 }
 
 function formToString(form) {
+    // List
     if (Array.isArray(form)) {
         return `(${form.map(formToString).join(' ')})`;
     }
-    else return form;
+
+    // TODO: String
+
+    // TODO: Number
+
+    // Symbol
+    return form;
 }
 
 function read(input) {
-    const reader = new TokenReader(input);
-    const form = tokensToForm(reader);
-    console.log(form);
+    const tokens = tokenize(input);
+    const form = tokensToForm(tokens);
     return form;
 }
 
@@ -74,38 +68,32 @@ function print(form) {
     return formToString(form);
 }
 
-function rep(input) {
-    const command = read(input);
-    const result = evaluate(command);
+function rep(request) {
+    const form = read(request);
+    const result = evaluate(form);
     const reply = print(result);
     return reply;
 }
 
-/**
- * @param {ReadableStream} input 
- * @param {WritableStream} output 
- */
-function main(input, output) {
+async function main (in_stream, out_stream) {
     const rl = readline.createInterface({
-        input, output, prompt: 'user> ',
+        input: in_stream,
+        output: out_stream,
+        prompt: 'nift> ',
     });
 
     rl.on('line', line => {
         const answer = rep(line);
-        output.write(answer + '\n');
+        out_stream.write(`${answer}\n`);
         rl.prompt();
-    });
-    
-    const done = new Promise(resolve => {
-        rl.once('close', resolve);
     });
 
     rl.prompt();
-    return done;
+
+    await new Promise(r => rl.once('close', r));
 }
 
-if (require.main === module)
-{
+if (require.main === module) {
     main(process.stdin, process.stdout);
 }
 
