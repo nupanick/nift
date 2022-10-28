@@ -12,38 +12,42 @@ function* tokenizer(source) {
 }
 
 function nextForm(tokens) {
-    const {value: t, done} = tokens.next();
-    if (done) return null;
+    const { value: t, done } = tokens.next();
+    if (done) { 
+        return { type: 'nil' };
+    }
 
     // List
     if (t == '(') {
-        const children = [];
+        const list = [];
         while (true) {
-            const child = nextForm(tokens);
-            if (child == ')') break;
-            if (child == null) {
+            const item = nextForm(tokens);
+            if (item.type == '_END_LIST') break;
+            if (item.type == 'nil') {
                 // TODO: Error! Missing closing brace!
                 break;
             }
-            children.push(child);
+            list.push(item);
         }
-        return children;
+        return { type: 'list', list }
     }
-    if (t == ')') return t;
+    if (t == ')') return { type: '_END_LIST' }
 
     // String
-    if (t[0] == '"') {
-        return t.slice(1, t.length-1);
+    if (t[0] == '"') return {
+        type: 'string',
+        string: t.slice(1, t.length-1), 
     }
 
     // Number
-    if (/[0-9]/.test(t[0])) {
+    if (/[0-9]/.test(t[0])) return {
+        type: 'number',
         // HACK: Let JS handle it for now.
-        return Number(t);
+        number: Number(t),
     }
 
     // Symbol
-    return { symbol: t };
+    return { type: 'symbol', symbol: t };
 }
 
 function read(source) {

@@ -5,12 +5,27 @@ const print = require('./print');
 const read = require('./read');
 
 const environment = {
-    '+': { function: (a, b) => a + b },
-    '-': { function: (a, b) => a - b },
-    '*': { function: (a, b) => a * b },
-    '/': { function: (a, b) => (a / b) | 0 },
-    'infix': { macro: (a, op, b) => [op, a, b] },
-}
+    '+': { type: 'function', function: (a, b) => ({ 
+        type: 'number', 
+        number: a.number + b.number, 
+    })},
+    '-': { type: 'function', function: (a, b) => ({ 
+        type: 'number', 
+        number: a.number - b.number, 
+    })},
+    '*': { type: 'function', function: (a, b) => ({ 
+        type: 'number', 
+        number: a.number * b.number, 
+    })},
+    '/': { type: 'function', function: (a, b) => ({ 
+        type: 'number', 
+        number: a.number / b.number | 0, 
+    })},
+    'infix': { type: 'macro', macro: (a, op, b) => ({
+        type: 'list',
+        list: [op, a, b] 
+    })},
+};
 
 function rep(source) {
     const form = read(source);
