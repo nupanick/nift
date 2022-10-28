@@ -13,7 +13,7 @@ class TokenReader {
 
     peek() {
         if (!this._match) return null;
-        console.log('peeked at ' + this._match[1]);
+        // console.log('peeked at ' + this._match[1]);
         return this._match[1];
     }
 
