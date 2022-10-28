@@ -21,11 +21,22 @@ tests['it removes whitespace'] = async () => {
     const stream_in = new PassThrough();
     const stream_out = new PassThrough();
     const done = repl(stream_in, stream_out);
-    stream_in.push('(1   2,,,3 )');
+    stream_in.push(',,, "1, 2, 3"   ');
     stream_in.end();
     await done;
     const lines = stream_out.read().toString().split('\n');
-    if (lines[0] !== 'nift> (1 2 3)') return false;
+    if (lines[0] !== 'nift> "1, 2, 3"') return false;
+    return true;
+}
+
+tests['it does arithmetic'] = async () => {
+    const stream_in = new PassThrough();
+    const stream_out = new PassThrough();
+    stream_in.push('(+ 2 (* 3 5))');
+    stream_in.end();
+    await repl(stream_in, stream_out);
+    const lines = stream_out.read().toString().split('\n');
+    if (lines[0] !== 'nift> 17') return false;
     return true;
 }
 
@@ -53,6 +64,6 @@ async function main() {
     }
 }
 
-if (require.main === module) {
+if (require.main == module) {
     main();
 }
