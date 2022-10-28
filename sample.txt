@@ -1,0 +1,61 @@
+(-- fizzbuzz --)
+(for-each (range 100) (fn i
+    (if 
+        (= 0 (mod 15 i)) "fizzbuzz"
+        (= 0 (mod 3 i)) "fizz"
+        (= 0 (mod 5 i)) "buzz"
+        (string i)
+    )
+))
+
+(-- bottles --)
+(let small-numbers (list
+    "no more" "one" "two" "three" "four" 
+    "five" "six" "seven" "eight" "nine"
+    "ten" "eleven" "twelve" "thirteen" "fourteen" 
+    "fifteen" "sixteen" "seventeen" "eighteen" "nineteen"
+))
+(let large-numbers (list
+    "" "" "twenty" "thirty" "fourty" 
+    "fifty" "sixty" "seventy" "eighty" "ninety"
+))
+(let cap (fn s
+    (string (prepend
+        (uppercase (head s))
+        (tail s)
+    ))
+))
+(let verse (fn i
+    (if
+        (= i 0) (string
+            "No more bottles of beer on the wall,\n"
+            "No more bottles of beer,\n"
+            "Go to the store and buy some more,"
+            "Ninety-nine bottles of beer on the wall."
+        )
+        (= i )
+))
+
+(-- expand list macro --)
+(let cap (fn s
+    (string
+        (uppercase (head s))
+        *(tail s)
+    )
+))
+
+(-- function named cons --)
+(let cap (fn s
+    (string (cons
+        (uppercase (head s))
+        (tail s)
+    ))
+))
+
+(-- function named prepend --)
+(let cap (fn s
+    (string (prepend
+        (uppercase (head s))
+        (tail s)
+    ))
+))

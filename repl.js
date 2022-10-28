@@ -52,19 +52,26 @@ function tokensToForm(reader) {
     return token;
 }
 
+function formToString(form) {
+    if (Array.isArray(form)) {
+        return `(${form.map(formToString).join(' ')})`;
+    }
+    else return form;
+}
+
 function read(input) {
     const reader = new TokenReader(input);
     const form = tokensToForm(reader);
     console.log(form);
-    return input;
+    return form;
 }
 
-function evaluate(input) {
-    return input;
+function evaluate(form) {
+    return form;
 }
 
-function print(input) {
-    return input;
+function print(form) {
+    return formToString(form);
 }
 
 function rep(input) {
