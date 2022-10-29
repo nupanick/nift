@@ -21,7 +21,7 @@ tests['it removes whitespace'] = async () => {
     const stream_in = new PassThrough();
     const stream_out = new PassThrough();
     const done = repl(stream_in, stream_out);
-    stream_in.push(',,, "1, 2, 3"   ');
+    stream_in.push(',,, "1, 2, 3"   \n');
     stream_in.end();
     await done;
     const lines = stream_out.read().toString().split('\n');
@@ -32,11 +32,32 @@ tests['it removes whitespace'] = async () => {
 tests['it does arithmetic'] = async () => {
     const stream_in = new PassThrough();
     const stream_out = new PassThrough();
-    stream_in.push('(+ 2 (* 3 5))');
+    stream_in.push('(+ 2 (* 3 5))\n');
     stream_in.end();
     await repl(stream_in, stream_out);
     const lines = stream_out.read().toString().split('\n');
     if (lines[0] !== 'nift> 17') return false;
+    return true;
+}
+
+tests['it remembers things with scopes'] = async () => {
+    const stream_in = new PassThrough();
+    const stream_out = new PassThrough();
+    stream_in.push('(put! a 0)\n');
+    stream_in.push('a\n');
+    stream_in.push('(put! a 15\n');
+    stream_in.push('a\n');
+    stream_in.push('(let a 25 b 2 (* a b))\n')
+    stream_in.push('a\n');
+    stream_in.end();
+    await repl(stream_in, stream_out);
+    const lines = stream_out.read().toString().split('\n');
+    if (lines[0] != 'nift> NIL') return false;
+    if (lines[1] != 'nift> 0') return false;
+    if (lines[2] != 'nift> NIL') return false;
+    if (lines[3] != 'nift> 15') return false;
+    if (lines[4] != 'nift> 50') return false;
+    if (lines[5] != 'nift> 15') return false;
     return true;
 }
 
