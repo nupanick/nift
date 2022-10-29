@@ -1,6 +1,6 @@
 const readline = require('readline');
 
-const { put } = require('./environment');
+const env = require('./env');
 const evaluate = require('./eval');
 const math = require('./math');
 const print = require('./print');
@@ -13,11 +13,11 @@ function rep(source, context) {
 }
 
 async function main (in_stream, out_stream) {
-    const replEnv = { };
-    put(replEnv, '+', math.add);
-    put(replEnv, '-', math.sub);
-    put(replEnv, '*', math.mul);
-    put(replEnv, '/', math.div);
+    const context = env.init();
+    env.put(context, '+', math.add);
+    env.put(context, '-', math.sub);
+    env.put(context, '*', math.mul);
+    env.put(context, '/', math.div);
 
     const rl = readline.createInterface({
         input: in_stream,
@@ -28,7 +28,7 @@ async function main (in_stream, out_stream) {
     rl.on('line', line => {
         line = line.trim();
         if (line.length) {
-            const answer = rep(line, replEnv);
+            const answer = rep(line, context);
             out_stream.write(`${answer}\n`);
         }
         rl.prompt();

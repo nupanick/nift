@@ -1,3 +1,7 @@
+function init(inherit) {
+    return { _inherit: inherit || null };
+}
+
 function put(env, k, v) {
     env[k] = v;
 }
@@ -12,4 +16,4 @@ function get(env, k) {
     return find(env, k)[k];
 }
 
-module.exports = { put, find, get };
+module.exports = { init, put, find, get };

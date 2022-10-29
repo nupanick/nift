@@ -1,25 +1,29 @@
-const { get, put } = require('./environment');
+const env = require('./env');
 
 function evaluate(form, context) {
     if (form.type == 'number') return form;
     if (form.type == 'string') return form;
     
-    if (form.type == 'symbol') return get(context, form.symbol);
+    if (form.type == 'symbol') return env.get(context, form.symbol);
     
     if (form.type == 'list') {
         if (form.list.length == 0) return form;
         const [head, ...tail] = form.list;
 
         if (head.type == 'symbol' && head.symbol == 'put!') {
-            put(context, tail[0].symbol, evaluate(tail[1], context));
+            env.put(context, tail[0].symbol, evaluate(tail[1], context));
             return { type: 'nil' };
         }
 
         if (head.type == 'symbol' && head.symbol == 'let') {
             // TODO: Ensure odd number of arguments to let!
-            const newContext = { _inherit: context };
+            const newContext = env.init(context);
             for (let i = 0; i < tail.length-1; i += 2) {
-                put(newContext, tail[i].symbol, evaluate(tail[i+1], newContext))
+                env.put(
+                    newContext, 
+                    tail[i].symbol, 
+                    evaluate(tail[i+1], newContext),
+                );
             }
             return evaluate(tail[tail.length-1], newContext);
         }
