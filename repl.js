@@ -27,7 +27,7 @@ async function main (in_stream, out_stream) {
 
     rl.on('line', line => {
         line = line.trim();
-        if (line) {
+        if (line.length) {
             const answer = rep(line, replEnv);
             out_stream.write(`${answer}\n`);
         }
