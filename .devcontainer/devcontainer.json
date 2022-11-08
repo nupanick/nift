@@ -1,4 +1,6 @@
 {
     "name": "Node.js",
-    "image": "mcr.microsoft.com/devcontainers/javascript-node:16-bullseye"
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:16-bullseye",
+    "runArgs": [ "--userns=keep-id" ],
+    "containerEnv": { "HOME": "/home/node" }
 }
