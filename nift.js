@@ -77,6 +77,34 @@ function read(source) {
     return form;
 }
 
+function evaluate(form, context) {
+    return form;
+}
+
+function print(form) {
+    if (form.number) return form.number.toString();
+    if (form.symbol) return form.symbol.toString();
+    if (form.string) return `"${form.string.replace('"','\\"')}"`;
+    if (form.table) {
+        const items = [];
+        for (const r of form.table) {
+            if (r.key) {
+                items.push(`:${print(r.key)}`);
+                items.push(print(r.value));
+            } else {
+                items.push(print(r));
+            }
+        }
+        return `(${items.join(' ')})`;
+    }
+}
+
+function rep(source) {
+    const form = read(source);
+    const result = evaluate(form);
+    return print(result);
+}
+
 function formToObject(form) {
     if (!form) return null;
     if (form.number) return form.number;
@@ -173,9 +201,23 @@ const sample1 = `(
     (p "Lorem ipsum dolor sit amet")
 )`
 
-import { fileURLToPath } from 'url';
-if (fileURLToPath(import.meta.url) === process.argv[1]) {
-    // main
+import readline from 'readline';
+async function main(input, output) {
+    const prompt = 'nift> ';
+    const rl = readline.createInterface({ input, output, prompt });
+    rl.on('line', line => {
+        line = line.trim();
+        if (line.length) {
+            const answer = rep(line);
+            output.write(`${answer}\n`);
+        }
+        rl.prompt();
+    });
+    rl.prompt();
+    await new Promise(r => rl.once('close', r));
+}
+
+function demo() {
     console.log(sample1);
 
     console.log('---');
@@ -188,4 +230,17 @@ if (fileURLToPath(import.meta.url) === process.argv[1]) {
 
     const html = formToHtml(form);
     console.log(html);
+
+    console.log('---');
+
+    console.log(print(form));
+
+    console.log('---');
+
+    console.log(formToHtml(read(print(form))));
+}
+
+import { fileURLToPath } from 'url';
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
+    main(process.stdin, process.stdout);
 }
