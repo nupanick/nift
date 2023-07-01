@@ -71,7 +71,10 @@ function readSymbol(tokens) {
     return { symbol: t };
 }
 
-function read(source) {
+function read(source, root=true) {
+    if (root) {
+        source = `(${source})`;
+    }
     const tokens = new Tokenizer(source);
     const form = readForm(tokens);
     return form;
@@ -105,7 +108,7 @@ function rep(source) {
     return print(result);
 }
 
-function formToObject(form) {
+function formToJs(form) {
     if (!form) return null;
     if (form.number) return form.number;
     if (form.string) return form.string;
@@ -115,19 +118,21 @@ function formToObject(form) {
         const a = [];
         for (const entry of form.table) {
             if (entry.key) {
-                const k = formToObject(entry.key);
+                const k = formToJs(entry.key);
                 if (typeof k === 'object') {
                     throw new Error('Cannot convert non-string key to JSON');
                 }
-                const v = formToObject(entry.value);
+                const v = formToJs(entry.value);
                 o[k.toString()] = v;
             } else {
-                a.push(formToObject(entry));
+                a.push(formToJs(entry));
             }
         }
-        if (!a.length) return o;
         if (!Object.keys(o).length) return a;
-        return { ...o, ...a, length: a.length };
+        if (a.length) {
+            o.children = a;
+        }
+        return o;
     }
 }
 
@@ -190,16 +195,15 @@ function formToHtml(form, indent=0) {
     ].join('\n');
 }
 
-const sample1 = `(
-    html
-    :lang en
-    (meta :encoding utf-8)
-    (title "My Website")
-    (style ":root" (:text-align center))
-    (h1 "Hello World!")
-    (br)
-    (p "Lorem ipsum dolor sit amet")
-)`
+const sample1 = `
+html
+:lang en
+(meta :encoding utf-8)
+(title "My Website")
+(h1 "Hello World!")
+(br)
+(p "Lorem ipsum dolor sit amet")
+`.trim();
 
 import readline from 'readline';
 async function main(input, output) {
@@ -223,24 +227,25 @@ function demo() {
     console.log('---');
 
     const form = read(sample1);
-    const obj = formToObject(form);
-    console.log(obj);
+    const obj = formToJs(form);
+    console.log(JSON.stringify(obj));
 
-    console.log('---');
+    // console.log('---');
 
-    const html = formToHtml(form);
-    console.log(html);
+    // const html = formToHtml(form);
+    // console.log(html);
 
     console.log('---');
 
     console.log(print(form));
 
-    console.log('---');
+    // console.log('---');
 
-    console.log(formToHtml(read(print(form))));
+    // console.log(formToHtml(read(print(form))));
 }
 
 import { fileURLToPath } from 'url';
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
-    main(process.stdin, process.stdout);
+    // main(process.stdin, process.stdout);
+    demo();
 }
