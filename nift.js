@@ -71,7 +71,10 @@ function readSymbol(tokens) {
     return { symbol: t };
 }
 
-function read(source) {
+function read(source, { root=false }={}) {
+    if (root) {
+        source = `(${source})`;
+    }
     const tokens = new Tokenizer(source);
     const form = readForm(tokens);
     return form;
@@ -190,16 +193,48 @@ function formToHtml(form, indent=0) {
     ].join('\n');
 }
 
-const sample1 = `(
+const sample1 = `
+html
+:lang en
+(meta :encoding utf-8)
+(title "My Website")
+(style ":root" (:text-align center))
+(h1 "Hello World!")
+(br)
+(p "Lorem ipsum dolor sit amet")
+`
+
+const sample2 = `
+nift
+:div? (fn (n d) (=? 0 (mod n d)))
+:fizzbuzz (fn (n) (if
+  (div? n 15) "fizzbuzz"
+  (div? n 3) "fizz"
+  (div? n 5) "buzz"
+  (string n)
+))
+:make-para (fn (n) '(p $(fizzbuzz n)))
+'(
     html
-    :lang en
-    (meta :encoding utf-8)
-    (title "My Website")
-    (style ":root" (:text-align center))
-    (h1 "Hello World!")
-    (br)
-    (p "Lorem ipsum dolor sit amet")
-)`
+    $@(for (range 100) make-para)
+)
+`
+
+const sample3 = `
+nift
+:div? (fn (n d) (=? 0 (mod n d)))
+:fizzbuzz (fn (n) & if
+  (div? n 15) "fizzbuzz"
+  (div? n 3) "fizz"
+  (div? n 5) "buzz"
+  (string n)
+)
+:make-para (fn (n) '(p $(fizzbuzz n)))
+&'
+html
+:title "Fizzbuzz Results"
+$@(for (range 100) make-para)
+`
 
 import readline from 'readline';
 async function main(input, output) {
@@ -222,7 +257,7 @@ function demo() {
 
     console.log('---');
 
-    const form = read(sample1);
+    const form = read(sample1, { root: true});
     const obj = formToObject(form);
     console.log(obj);
 
@@ -242,5 +277,6 @@ function demo() {
 
 import { fileURLToPath } from 'url';
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
-    main(process.stdin, process.stdout);
+    // main(process.stdin, process.stdout);
+    demo();
 }
